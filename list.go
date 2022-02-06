@@ -1,9 +1,12 @@
 package pine
 
+import "sync"
+
 type CachedList[T any] struct {
 	Data [][]T
 	CacheLife
 	Capacity int
+	sync.RWMutex
 }
 
 func NewCachedList[T any](lifeTime int64, capacity int) *CachedList[T] {
@@ -13,7 +16,12 @@ func NewCachedList[T any](lifeTime int64, capacity int) *CachedList[T] {
 		CacheLife: CacheLife{Lifetime: lifeTime}}
 }
 
-func (list *CachedList[T]) Append(data []T) {
+func (list *CachedList[T]) Append(data []T, at int) {
+	list.Lock()
+	defer list.Unlock()
+	if len(list.Data) != at {
+		return
+	}
 	list.Data = append(list.Data, data)
 	if len(list.Data) == 1 {
 		list.Update()
@@ -59,7 +67,7 @@ func (list *CachedList[T]) Count() (page int, num int) {
 }
 
 //get list from specific index
-func (list *CachedList[T]) GetPage(page int, getData func(page int) []T) (listData []T) {
+func (list *CachedList[T]) GetPage(page int, getData func(page int) ([]T, error)) (listData []T, err error) {
 	if list.UpdatedAt > 0 && list.Expired() {
 		list.Clear()
 		return getData(page)
@@ -69,11 +77,14 @@ func (list *CachedList[T]) GetPage(page int, getData func(page int) []T) (listDa
 	}
 	listLen := len(list.Data)
 	if listLen < page {
-		d := getData(page)
-		if listLen == page-1 {
-			list.Append(d)
+		d, err := getData(page)
+		if err != nil {
+			return nil, err
 		}
-		return d
+		if listLen == page-1 {
+			list.Append(d, page-1)
+		}
+		return d, nil
 	}
-	return list.Data[page-1]
+	return list.Data[page-1], nil
 }

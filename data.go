@@ -15,13 +15,16 @@ func (data *CachedData[T]) Set(d *T) {
 	data.Update()
 }
 
-func (data *CachedData[T]) Get(onExpire func() *T) *T {
+func (data *CachedData[T]) Get(onExpire func() (*T, error)) (*T, error) {
 	if data.Expired() {
-		d := onExpire()
+		d, err := onExpire()
+		if err != nil {
+			return nil, err
+		}
 		data.Set(d)
-		return d
+		return d, nil
 	}
-	return data.Data
+	return data.Data, nil
 }
 
 func (data *CachedData[T]) Clear() {
