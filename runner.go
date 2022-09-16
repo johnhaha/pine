@@ -20,8 +20,8 @@ type DataLife struct {
 	LifeTime time.Time
 }
 
-type CacheData struct {
-	Data      any
+type CacheData[T any] struct {
+	Data      T
 	FromCache bool
 }
 
@@ -45,14 +45,14 @@ func (h *DataLifeHeap) Pop() any {
 	return x
 }
 
-func Get(id string, lifeTime time.Duration, execution func() (any, error)) (*CacheData, error) {
+func Get[T any](id string, lifeTime time.Duration, execution func() (T, error)) (*CacheData[T], error) {
 
 	//read data from cache
 	mtx.RLock()
 	if v, ok := vault[id]; ok {
 		mtx.RUnlock()
-		return &CacheData{
-			Data:      v,
+		return &CacheData[T]{
+			Data:      v.(T),
 			FromCache: true,
 		}, nil
 	}
@@ -73,7 +73,7 @@ func Get(id string, lifeTime time.Duration, execution func() (any, error)) (*Cac
 	})
 	mtx.Unlock()
 
-	return &CacheData{
+	return &CacheData[T]{
 		Data:      res,
 		FromCache: false,
 	}, nil
