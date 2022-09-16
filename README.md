@@ -1,9 +1,9 @@
 # pine
 
-pine is a data cache tool
+pine is a runtime cache tool
 
 ## Install
 
 ```bash
-go get github.com/johnhaha/pine@v0.0.2
+go get github.com/johnhaha/pine@v0.0.3
 ```

@@ -1,3 +1,3 @@
 module github.com/johnhaha/pine
 
-go 1.18
+go 1.19
