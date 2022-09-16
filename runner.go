@@ -45,6 +45,7 @@ func (h *DataLifeHeap) Pop() any {
 	return x
 }
 
+// get from cache if exists, store cache with execution if not exists
 func Get[T any](id string, lifeTime time.Duration, execution func() (T, error)) (*CacheData[T], error) {
 
 	//read data from cache
@@ -77,6 +78,13 @@ func Get[T any](id string, lifeTime time.Duration, execution func() (T, error)) 
 		Data:      res,
 		FromCache: false,
 	}, nil
+}
+
+// remove cache with id
+func Remove(id string) {
+	mtx.Lock()
+	delete(vault, id)
+	mtx.Unlock()
 }
 
 func registerLife(life DataLife) {
