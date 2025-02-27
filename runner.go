@@ -31,13 +31,11 @@ func Get[T any](id string, withCache bool, execution func() (T, error)) (*CacheD
 	if withCache {
 		if res, err := Cache.Get(id); err == nil {
 			data := new(CacheData[T])
-			err := data.Decode(res)
-			if err != nil {
-				Cache.Delete(id)
-				return nil, err
+			err = data.Decode(res)
+			if err == nil {
+				data.FromCache = true
+				return data, nil
 			}
-			data.FromCache = true
-			return data, nil
 		}
 	}
 
